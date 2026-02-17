@@ -2,8 +2,11 @@ import express, { Express , Request ,Response} from "express";
 import { config } from "dotenv"
 import cors from "cors";
 import { connectDb } from "./db/db.js";
+import authRouter from "./routes/user.js";
 config();
 type portNumber= number|string;
+const Port : portNumber  = process.env.PORT||8080;
+
 const app : Express = express();
 connectDb();
 
@@ -17,7 +20,12 @@ app.use(cors(
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
 
-const Port : portNumber  = process.env.PORT||8080;
+
+
+
+
+app.use("/api/v1/auth",authRouter);
+
 
 
 app.listen(Port,():void=>{
