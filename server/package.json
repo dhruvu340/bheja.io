@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "npm run build && node dist/index.js",
-    "dev":"nodemon ts-node/esm src/index.ts",
+    "dev": "nodemon ts-node/esm src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -16,6 +16,7 @@
   "dependencies": {
     "@types/express": "^5.0.6",
     "express": "^5.2.1",
+    "mongoose": "^9.2.1",
     "typescript": "^5.9.3"
   },
   "devDependencies": {
