@@ -1,9 +1,25 @@
-import express from "express";
+import express, { Express , Request ,Response} from "express";
+import { config } from "dotenv"
+import cors from "cors";
+import { connectDb } from "./db/db.js";
+config();
+type portNumber= number|string;
+const app : Express = express();
+connectDb();
 
-const app = express();
+app.use(cors(
+    { 
+        origin : process.env.HOST_URL||"*",
+    }
+))
 
-app.use("/api/v1",UserRouter);
 
-app.listen(3000,():void=>{
-    console.log("app listening to port 3000");  
+app.use(express.urlencoded({extended:true}));
+app.use(express.json());
+
+const Port : portNumber  = process.env.PORT||8080;
+
+
+app.listen(Port,():void=>{
+    console.log(`server running on port ${Port}`);  
 })
