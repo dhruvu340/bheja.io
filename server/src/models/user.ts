@@ -46,4 +46,4 @@ UserSchema.pre("save", async function ():Promise<void> {
 
 
 export type IUser = InferSchemaType<typeof UserSchema>;
-export const User = model<IUser,Model<IUser,{},UserMethods>>("users",UserSchema);
+export const User:Model<IUser,{},UserMethods> = model<IUser,Model<IUser,{},UserMethods>>("users",UserSchema);
