@@ -1,38 +1,49 @@
-import { Schema, model, type InferSchemaType } from "mongoose";
+import { Model, Schema, model, type InferSchemaType } from "mongoose";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
+interface UserMethods {
+  comparePass(password:string):Promise<boolean>;
+  genAccessToken():string;
+  genRefreshToken():string;
+}
 
 const UserSchema = new Schema(
   {
-    name: {
-      type: String,
-      required: true,  
-      trim: true,
-      index: true
-    },
-
-    email: {
-      type: String,
-      unique: true,
-      trim: true,
-      required: true,   
-      lowercase: true
-    },
-
-    passhash: {
-      type: String,
-      select: false,
-      required: true    
-    },
-
-    refreshToken: {
-      type: String,
-      select: false
-    }
+    name:         { type: String, required: true, trim: true },
+    email:        { type: String, required: true, unique: true, lowercase: true },
+    passhash:     { type: String, required: true },
+    refreshToken: { type: String },
   },
-  {
-    timestamps: true
-  }
+  { timestamps: true }
 );
 
-export type IUser = InferSchemaType<typeof UserSchema>;
+UserSchema.methods.comparePass = async function (password: string): Promise<boolean> {
+  return bcrypt.compare(password, this.passhash);
+};
 
-export const User = model<IUser>("User", UserSchema);
+UserSchema.methods.genAccessToken = function (): string {
+  return jwt.sign(
+    { _id: this._id, name: this.name, email: this.email },
+    process.env.JWT_SECRET!,
+    { expiresIn: Number(process.env.EXPIREIN) }
+  );
+};
+
+UserSchema.methods.genRefreshToken = function (): string {
+  return jwt.sign(
+    { _id: this._id, name: this.name, email: this.email },
+    process.env.REFRESH_SECRET!,
+    { expiresIn: Number(process.env.EXPIREINR) }
+  );
+};
+
+UserSchema.pre("save", async function ():Promise<void> {
+  if (this.isModified("passhash")) {
+    this.passhash = await bcrypt.hash(this.passhash, 10);
+  }
+});
+
+
+export type IUser = InferSchemaType<typeof UserSchema>;
+export const User = model<IUser,Model<IUser,{},UserMethods>>("users",UserSchema);
