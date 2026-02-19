@@ -14,7 +14,7 @@ export class ApiResponse<T = unknown> implements IResponse<T> {
     data?: T,
     message: string = "successful"
   ) {
-    this.success = statusCode < 300;
+    this.success = statusCode < 400;
     this.data = data;
     this.message = message;
   }

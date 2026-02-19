@@ -1,7 +1,9 @@
 import { Response, Request } from "express";
 import { AsyncHandler, ApiError } from "../utils/error.js";
 import { User } from "../models/user.js";
+import {ObjectId} from "mongoose"
 import bcrypt from "bcrypt"
+import { ApiResponse } from "../utils/ires.js";
 
 interface Tokentype{
     accessToken:string,
@@ -65,12 +67,7 @@ export const Signup = AsyncHandler(async (req: Request, res: Response) : Promise
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json({
-      success: true,
-      msg: "Signup successfully",
-      user: loggedUser,
-      accessToken,
-    });
+    .send(new ApiResponse(300,loggedUser,"signup successfully"));
 });
 
 
@@ -98,11 +95,21 @@ export const Signin= AsyncHandler(async (req:Request,res:Response):Promise<Respo
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json({
-      success: true,
-      msg: "Signin successfully",
-      user: loguser,
-      accessToken,
-    });
+    .send(new ApiResponse(300,loguser,"signin sucessfully"));
 
+})
+
+
+export const Logout = AsyncHandler(async (req:Request,res:Response):Promise<Response>=>{
+    const {email}=req.body;
+
+    const logged=await User.findOneAndUpdate({email},{
+      $set:{refreshToken:""}
+    });
+    const options : Optype ={
+    httpOnly:true,
+    secure:false
+   }
+
+    return res.status(300).clearCookie("accessToken",options).clearCookie("refreshToken",options).send(new ApiResponse(300,{},"logged out successfully"));
 })
