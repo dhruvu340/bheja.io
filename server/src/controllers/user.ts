@@ -1,10 +1,16 @@
 import { Response, Request } from "express";
 import { AsyncHandler, ApiError } from "../utils/error.js";
 import { User } from "../models/user.js";
+import bcrypt from "bcrypt"
 
 interface Tokentype{
     accessToken:string,
     refreshToken:string,
+}
+
+interface Optype{
+  httpOnly:boolean,
+  secure:boolean,
 }
 
 const generateAccessAndRefreshToken = async (userId: string):Promise<Tokentype> => {
@@ -21,7 +27,7 @@ const generateAccessAndRefreshToken = async (userId: string):Promise<Tokentype> 
 
     return { accessToken, refreshToken };
   } catch {
-    throw new Error("Error while authentication");
+    throw new ApiError(400,"Error while authentication");
   }
 };
 
@@ -50,7 +56,7 @@ export const Signup = AsyncHandler(async (req: Request, res: Response) : Promise
   const loggedUser = await User.findById(newUser._id)
     .select("-passhash -refreshToken");
 
-  const options = {
+  const options :Optype = {
     httpOnly: true,
     secure: false,
   };
@@ -67,3 +73,36 @@ export const Signup = AsyncHandler(async (req: Request, res: Response) : Promise
     });
 });
 
+
+
+export const Signin= AsyncHandler(async (req:Request,res:Response):Promise<Response>=>{
+  const {email,password} = req.body;
+  if(email.trim()===""||password.trim()===""){
+    throw new ApiError(400,"all fields are required");
+  }
+  const newUser=await User.findOne({email});
+  if(!newUser){
+    throw new ApiError(409,"user does not exist with the email");
+  }
+  const flag : boolean =await bcrypt.compare(password,newUser.passhash);
+  if(!flag){
+    throw new ApiError(400,"wrong password");
+  }
+  const {accessToken,refreshToken}= await generateAccessAndRefreshToken(newUser._id.toString());
+  const loguser=await User.findById(newUser._id).select("-passhash -refreshToken");
+  const options : Optype ={
+    httpOnly:true,
+    secure:false
+   }
+   return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json({
+      success: true,
+      msg: "Signin successfully",
+      user: loguser,
+      accessToken,
+    });
+
+})
