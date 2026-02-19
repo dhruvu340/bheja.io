@@ -77,7 +77,7 @@ export const Signup = AsyncHandler(async (req: Request, res: Response) : Promise
 
 export const Signin= AsyncHandler(async (req:Request,res:Response):Promise<Response>=>{
   const {email,password} = req.body;
-  if(email.trim()===""||password.trim()===""){
+  if(email?.trim()===""||password?.trim()===""){
     throw new ApiError(400,"all fields are required");
   }
   const newUser=await User.findOne({email});
